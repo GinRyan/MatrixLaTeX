@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 void main(List<String> args) {
   runApp(MaterialApp(
-    title: '矩阵LaTeX生成器',
+    title: '矩阵LaTeX代码生成器',
     theme: ThemeData(
       primarySwatch: Colors.green,
     ),
@@ -33,6 +33,8 @@ class MainFrameWidget extends StatefulWidget {
 }
 
 List<List<String>> _table = [];
+bool isDetermine = false;
+bool asBlock = false;
 
 class MainFrameWidgetState extends State<MainFrameWidget> {
   ValueChanged<String> onRowInput;
@@ -52,9 +54,6 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
   final String determineRight = " \\end{matrix}\\right|";
   final String andChar = " & ";
   final String endline = "\\\\";
-
-  bool isDetermine = false;
-  bool asBlock = false;
 
   @override
   void initState() {
@@ -223,101 +222,19 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
       ),
     ];
 
-    line.add(Container(
-      child: SizedBox(
-        child: Row(
-          children: [
-            Checkbox(
-              value: isDetermine,
-              onChanged: (checked) {
-                setState(() {
-                  isDetermine = checked;
-                });
-              },
-            ),
-            Text("改为行列式而不是矩阵"),
-          ],
-        ),
-      ),
-    ));
-
-    line.add(Container(
-      child: SizedBox(
-        child: Row(
-          children: [
-            Checkbox(
-              value: asBlock,
-              onChanged: (checked) {
-                setState(() {
-                  asBlock = checked;
-                });
-              },
-            ),
-            Text("加\$\$作为整块公式，而不是行内"),
-          ],
-        ),
-      ),
-    ));
+    line.add(Prefs());
 
     line.addAll(_columnLines);
 
     line.add(
-      Container(
-        padding: EdgeInsets.all(12),
-        child: SizedBox(
-          height: 40,
-          width: 100,
-          child: RaisedButton(
-              color: Colors.green.shade300,
-              child: Text(
-                "生成LaTeX",
-              ),
-              onPressed: () {
-                String start = isDetermine ? determineLeft : matrixLeft;
-                String end = isDetermine ? determineRight : matrixRight;
-
-                String arrayLaTex = start;
-
-                for (var i = 0; i < _table.length; i++) {
-                  for (var j = 0; j < _table[i].length; j++) {
-                    arrayLaTex += _table[i][j];
-                    if (j + 1 < _table[i].length) {
-                      arrayLaTex += andChar;
-                    }
-                  }
-                  arrayLaTex += endline + "\n";
-                }
-                arrayLaTex += end;
-
-                if (asBlock) {
-                  arrayLaTex = "\$\$$arrayLaTex\$\$";
-                }
-                setState(() {
-                  print("Matrix: $arrayLaTex");
-                  outputEditingController.text = "$arrayLaTex";
-
-                  //outputEditingController.value.copyWith(text: "$_table");
-                });
-              }),
-        ),
-      ),
-    );
-
-    line.add(
-      Container(
-        child: SizedBox(
-          height: 300,
-          width: 300,
-          child: TextField(
-            controller: outputEditingController,
-            enableInteractiveSelection: true,
-            readOnly: false,
-            decoration: InputDecoration(
-                border: OutlineInputBorder(), labelText: 'LaTeX'),
-          ),
-        ),
-        padding: EdgeInsets.symmetric(vertical: 16),
-      ),
+      GenerateResultWidget(
+          determineLeft: determineLeft,
+          matrixLeft: matrixLeft,
+          determineRight: determineRight,
+          matrixRight: matrixRight,
+          andChar: andChar,
+          endline: endline,
+          outputEditingController: outputEditingController),
     );
 
     var mainFrame = FittedBox(
@@ -329,5 +246,148 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
       ),
     );
     return mainFrame;
+  }
+}
+
+class GenerateResultWidget extends StatefulWidget {
+  const GenerateResultWidget({
+    Key key,
+    @required this.determineLeft,
+    @required this.matrixLeft,
+    @required this.determineRight,
+    @required this.matrixRight,
+    @required this.andChar,
+    @required this.endline,
+    @required this.outputEditingController,
+  }) : super(key: key);
+
+  final String determineLeft;
+  final String matrixLeft;
+  final String determineRight;
+  final String matrixRight;
+  final String andChar;
+  final String endline;
+  final TextEditingController outputEditingController;
+
+  @override
+  _GenerateResultWidgetState createState() => _GenerateResultWidgetState();
+}
+
+class _GenerateResultWidgetState extends State<GenerateResultWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(12),
+          child: SizedBox(
+            height: 40,
+            width: 100,
+            child: RaisedButton(
+                color: Colors.green.shade300,
+                child: Text(
+                  "生成LaTeX",
+                ),
+                onPressed: () {
+                  String start =
+                      isDetermine ? widget.determineLeft : widget.matrixLeft;
+                  String end =
+                      isDetermine ? widget.determineRight : widget.matrixRight;
+
+                  String arrayLaTex = start;
+
+                  for (var i = 0; i < _table.length; i++) {
+                    for (var j = 0; j < _table[i].length; j++) {
+                      arrayLaTex += _table[i][j];
+                      if (j + 1 < _table[i].length) {
+                        arrayLaTex += widget.andChar;
+                      }
+                    }
+                    arrayLaTex += widget.endline + "\n";
+                  }
+                  arrayLaTex += end;
+
+                  if (asBlock) {
+                    arrayLaTex = "\$\$$arrayLaTex\$\$";
+                  }
+                  setState(() {
+                    print("Matrix: $arrayLaTex");
+                    widget.outputEditingController.text = "$arrayLaTex";
+
+                    //outputEditingController.value.copyWith(text: "$_table");
+                  });
+                }),
+          ),
+        ),
+        Container(
+          child: SizedBox(
+            height: 300,
+            width: 300,
+            child: TextField(
+              controller: widget.outputEditingController,
+              enableInteractiveSelection: true,
+              readOnly: false,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(), labelText: 'LaTeX代码，按Ctrl+C复制'),
+            ),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 16),
+        )
+      ],
+    );
+  }
+}
+
+class Prefs extends StatefulWidget {
+  Prefs({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  _PrefsState createState() => _PrefsState();
+}
+
+class _PrefsState extends State<Prefs> {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          child: SizedBox(
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isDetermine,
+                  onChanged: (checked) {
+                    setState(() {
+                      isDetermine = checked;
+                    });
+                  },
+                ),
+                Text("改为行列式而不是矩阵"),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          child: SizedBox(
+            child: Row(
+              children: [
+                Checkbox(
+                  value: asBlock,
+                  onChanged: (checked) {
+                    setState(() {
+                      asBlock = checked;
+                    });
+                  },
+                ),
+                Text("加\$\$作为整块公式，而不是行内"),
+              ],
+            ),
+          ),
+        )
+      ],
+    );
   }
 }
