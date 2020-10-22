@@ -32,6 +32,8 @@ class MainFrameWidget extends StatefulWidget {
   }
 }
 
+List<List<String>> _table = [];
+
 class MainFrameWidgetState extends State<MainFrameWidget> {
   ValueChanged<String> onRowInput;
   ValueChanged<String> onColumnInput;
@@ -41,7 +43,6 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
   int rowReadOnly = 0;
   int columnReadOnly = 0;
 
-  List<List<String>> _table = [];
   List<List<TextEditingController>> _textEditingController = [];
   TextEditingController outputEditingController = TextEditingController();
 
@@ -114,7 +115,6 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
 
   @override
   Widget build(BuildContext context) {
-    _table = [];
     _textEditingController = [];
 
     List<Widget> _columnLines = [];
@@ -171,6 +171,7 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
 
     List<Widget> line = [
       Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text("行数列数："),
           Container(
@@ -311,8 +312,8 @@ class MainFrameWidgetState extends State<MainFrameWidget> {
             controller: outputEditingController,
             enableInteractiveSelection: true,
             readOnly: false,
-            // decoration: InputDecoration(
-            //     border: OutlineInputBorder(), labelText: 'LaTeX'),
+            decoration: InputDecoration(
+                border: OutlineInputBorder(), labelText: 'LaTeX'),
           ),
         ),
         padding: EdgeInsets.symmetric(vertical: 16),
